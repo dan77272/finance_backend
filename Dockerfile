@@ -1,12 +1,13 @@
-# Use an official OpenJDK image as the base
 FROM openjdk:17-jdk-slim
 
-# Set the working directory
+# Install Maven
+RUN apt-get update && apt-get install -y maven
+
 WORKDIR /app
 
-# Copy the pre-built JAR into the container
-COPY target/personal-finance-management-0.0.1-SNAPSHOT.jar app.jar
+COPY . .
 
-# Set the command to run the application
-CMD ["java", "-Dserver.port=$PORT", "-jar", "app.jar"]
+RUN mvn clean install -DskipTests
+
+CMD ["java", "-Dserver.port=$PORT", "-jar", "target/personal-finance-management-0.0.1-SNAPSHOT.jar"]
 

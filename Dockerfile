@@ -9,5 +9,7 @@ COPY . .
 
 RUN mvn clean install -DskipTests
 
-CMD ["java", "-Dserver.port=$PORT", "-jar", "target/personal-finance-management-0.0.1-SNAPSHOT.jar"]
+# Use sh -c to ensure $PORT is expanded correctly
+CMD ["sh", "-c", "java -Dserver.port=${PORT} -jar target/personal-finance-management-0.0.1-SNAPSHOT.jar"]
+
 

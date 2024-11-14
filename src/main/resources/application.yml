@@ -48,4 +48,4 @@ spring:
     password: ${PGPASSWORD}
   jpa:
     hibernate:
-      ddl-auto: validate # Validate schema but don't update in production
+      ddl-auto: update # Validate schema but don't update in production

@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: prod
 
 ---
 # Default configuration shared across profiles
@@ -43,9 +43,9 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: jdbc:postgresql://localhost:5432/prodDb
-    username: prodUser
-    password: prodPass
+    url: ${DATABASE_URL}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate # Validate schema but don't update in production

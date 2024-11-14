@@ -1,0 +1,51 @@
+spring:
+  profiles:
+    active: dev
+
+---
+# Default configuration shared across profiles
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # Keep as update in dev, change in prod
+    show-sql: true # Show SQL queries in dev, hide in prod
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: dannys77222@gmail.com
+    password: doeu ocly lpjs uiux
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+# Development Profile
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/devdb
+    username: devuser
+    password: devPass
+  jpa:
+    hibernate:
+      ddl-auto: update # Automatically update the schema in dev
+
+# Production Profile
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:postgresql://localhost:5432/prodDb
+    username: prodUser
+    password: prodPass
+  jpa:
+    hibernate:
+      ddl-auto: validate # Validate schema but don't update in production

@@ -10,7 +10,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update # Keep as update in dev, change in prod
-    show-sql: true # Show SQL queries in dev, hide in prod
   mail:
     host: smtp.gmail.com
     port: 587
@@ -35,6 +34,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update # Automatically update the schema in dev
+    show-sql: true # Show SQL queries in dev, hide in prod
 
 # Production Profile
 ---
@@ -49,3 +49,4 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update # Validate schema but don't update in production
+    show-sql: false # Show SQL queries in dev, hide in prod

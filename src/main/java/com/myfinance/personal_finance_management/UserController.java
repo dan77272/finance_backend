@@ -1,13 +1,16 @@
 package com.myfinance.personal_finance_management;
 
 import com.myfinance.personal_finance_management.dto.LoginRequest;
+import com.myfinance.personal_finance_management.exception.UserNotFoundException;
 import com.myfinance.personal_finance_management.service.EmailService;
 import com.myfinance.personal_finance_management.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -57,6 +60,16 @@ public class UserController {
             return ResponseEntity.ok("Subscribed to " + request.getFrequency() + " reports");
         } else {
             return ResponseEntity.status(404).body("User not found");
+        }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getUserProfile(@RequestHeader("Authorization") String token){
+        try{
+            Map<String, String> userProfile = userService.getUserProfile(token);
+            return ResponseEntity.ok(userProfile);
+        }catch (UserNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 

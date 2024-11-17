@@ -1,6 +1,7 @@
 package com.myfinance.personal_finance_management;
 
 import com.myfinance.personal_finance_management.dto.LoginRequest;
+import com.myfinance.personal_finance_management.exception.UserNotFoundException;
 import com.myfinance.personal_finance_management.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -49,6 +50,20 @@ public class UserService {
             return ResponseEntity.ok(response);
         }else{
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
+    }
+
+    public Map<String, String> getUserProfile(String token){
+        String username = jwtUtil.extractUsername(token.substring(7));
+        Optional<User> user = userRepository.findByUsername(username);
+
+        if(user.isPresent()){
+            Map<String, String> response = new HashMap<>();
+            response.put("username", user.get().getUsername());
+            response.put("userId", user.get().getId().toString());
+            return response;
+        }else {
+            throw new UserNotFoundException("User not found");
         }
     }
 

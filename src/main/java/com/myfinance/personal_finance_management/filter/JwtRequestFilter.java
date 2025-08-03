@@ -3,6 +3,7 @@ package com.myfinance.personal_finance_management.filter;
 import com.myfinance.personal_finance_management.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // List of endpoints to exclude from JWT processing
     private static final List<AntPathRequestMatcher> EXCLUDE_URLS = Arrays.asList(
             new AntPathRequestMatcher("/api/auth/login"),
             new AntPathRequestMatcher("/api/auth/register")
@@ -42,23 +42,35 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             }
         }
 
-        final String authorizationHeader = request.getHeader("Authorization");
-
         String username = null;
         String jwt = null;
 
-        // Check for JWT token in the Authorization header
+        // 1. Check for JWT in Authorization header
+        final String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
+        }
+
+        // 2. If not found, check for JWT in cookie
+        if (jwt == null && request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("token".equals(cookie.getName())) {
+                    jwt = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        // 3. Extract username if jwt found
+        if (jwt != null) {
             try {
                 username = jwtUtil.extractUsername(jwt);
             } catch (Exception e) {
-                // Invalid JWT token; proceed without setting authentication
                 logger.error("JWT token extraction failed: " + e.getMessage());
             }
         }
 
-        // Validate the token and set the authentication context
+        // 4. Validate token and set authentication context
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtUtil.validateToken(jwt, username)) {
                 UsernamePasswordAuthenticationToken authenticationToken =
@@ -68,7 +80,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             }
         }
 
-        // Continue the filter chain
         chain.doFilter(request, response);
     }
 }

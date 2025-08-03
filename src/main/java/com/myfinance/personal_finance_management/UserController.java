@@ -4,8 +4,10 @@ import com.myfinance.personal_finance_management.dto.LoginRequest;
 import com.myfinance.personal_finance_management.exception.UserNotFoundException;
 import com.myfinance.personal_finance_management.service.EmailService;
 import com.myfinance.personal_finance_management.service.ReportService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,9 +38,39 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest){
-        return userService.loginUser(loginRequest);
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest, HttpServletResponse response){
+        Map<String, Object> loginResult = userService.loginUser(loginRequest);
+        String token = (String) loginResult.get("token");
+        Object body = loginResult.get("body");
+
+        if(token != null){
+            ResponseCookie cookie = ResponseCookie.from("token", token)
+                    .httpOnly(true)
+                    .secure(false)
+                    .path("/")
+                    .sameSite("Lax")
+                    .maxAge(24 * 60* 60)
+                    .build();
+            response.addHeader("Set-Cookie", cookie.toString());
+            return ResponseEntity.ok(body);
+        }else{
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+        }
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from("token", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
+
 
     @GetMapping("/users")
     public List<User> getAllUsers(){
@@ -64,14 +96,23 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile(@RequestHeader("Authorization") String token){
-        try{
+    public ResponseEntity<?> getUserProfile(@CookieValue(value = "token", required = false) String token) {
+        System.out.println("Cookie token: " + token); // debug
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Not logged in"));
+        }
+        try {
             Map<String, String> userProfile = userService.getUserProfile(token);
             return ResponseEntity.ok(userProfile);
-        }catch (UserNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            // If the token is invalid (expired/invalid signature), return unauthorized
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid token"));
         }
     }
+
 
     @GetMapping("/test-email")
     public ResponseEntity<?> sendTestEmail(){

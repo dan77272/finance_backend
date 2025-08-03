@@ -39,33 +39,39 @@ public class UserService {
         }
     }
 
-    public ResponseEntity<?> loginUser(LoginRequest loginRequest){
+    public Map<String, Object> loginUser(LoginRequest loginRequest){
         Optional<User> user = userRepository.findByUsername(loginRequest.getUsername());
 
+        Map<String, Object> result = new HashMap<>();
         if(user.isPresent() && passwordEncoder.matches(loginRequest.getPassword(), user.get().getPassword())){
             String token = jwtUtil.generateToken(user.get().getUsername());
-            Map<String, String> response = new HashMap<>();
-            response.put("token", token);
-            response.put("userId", user.get().getId().toString());
-            return ResponseEntity.ok(response);
+            result.put("token", token);
+            result.put("body", Map.of("userId", user.get().getId().toString(), "message", "Login successful"));
         }else{
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+            result.put("token", null);
+            result.put("body", Map.of("message", "Email or password is incorrect"));
         }
+        return result;
     }
 
-    public Map<String, String> getUserProfile(String token){
-        String username = jwtUtil.extractUsername(token.substring(7));
+    public Map<String, String> getUserProfile(String token) {
+        System.out.println("Received JWT in service: " + token); // debug
+
+        String username = jwtUtil.extractUsername(token); // Make sure this doesn't throw!
+        System.out.println("Decoded username: " + username);
+
         Optional<User> user = userRepository.findByUsername(username);
 
-        if(user.isPresent()){
+        if (user.isPresent()) {
             Map<String, String> response = new HashMap<>();
             response.put("username", user.get().getUsername());
             response.put("userId", user.get().getId().toString());
             return response;
-        }else {
+        } else {
             throw new UserNotFoundException("User not found");
         }
     }
+
 
     public List<User> getAllUsers(){
         return userRepository.findAll();

@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "https://financefrontend-production.up.railway.app/")
+@CrossOrigin(origins = "https://financefrontend-production.up.railway.app")
 public class UserController {
 
     @Autowired

@@ -46,9 +46,9 @@ public class UserController {
         if(token != null){
             ResponseCookie cookie = ResponseCookie.from("token", token)
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(true)
                     .path("/")
-                    .sameSite("Lax")
+                    .sameSite("None")
                     .maxAge(24 * 60* 60)
                     .build();
             response.addHeader("Set-Cookie", cookie.toString());

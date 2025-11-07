@@ -6,13 +6,13 @@ WORKDIR /app
 
 # Cache deps first
 COPY pom.xml .
-# BuildKit cache: give it a stable id
-RUN --mount=type=cache,target=/root/.m2,id=maven-cache \
+# ✅ Properly declared cache mount
+RUN --mount=type=cache,id=maven-cache,target=/root/.m2 \
     mvn -q -DskipTests dependency:go-offline
 
 # Then copy sources and build
 COPY src ./src
-RUN --mount=type=cache,target=/root/.m2,id=maven-cache \
+RUN --mount=type=cache,id=maven-cache,target=/root/.m2 \
     mvn -q -DskipTests package
 
 # ---- Runtime stage ----
@@ -26,7 +26,3 @@ ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
 EXPOSE 8080
 
 CMD ["sh","-c","java -Dserver.address=0.0.0.0 -Dserver.port=${PORT:-8080} -jar /app/app.jar"]
-
-
-
-
